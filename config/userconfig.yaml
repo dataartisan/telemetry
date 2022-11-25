@@ -1,0 +1,7 @@
+telegraf:
+  sql_plugin:
+    hosts:
+      - host: 10.166.151.21
+        port: 1433
+        username: vlcs
+        password: vlcs      

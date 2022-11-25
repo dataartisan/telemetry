@@ -1,0 +1,58 @@
+version: '3'
+name: telemetry
+networks:
+  net:
+  #name: telemetry
+
+volumes:
+  influx_data: {}
+  grafana_data: {}
+
+services:
+  config:
+    build: .
+    volumes:
+      - .:/opt/telemetry:rw
+  influxdb:
+    image: "influxdb:latest"
+    container_name: influxdb
+    networks:
+      - net
+    ports:
+      - 8086:8086
+    volumes:
+      - /Users/s_pant/Desktop/docker/lnw-telemetry/telemetry-data:/var/lib/influxdb2:rw
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=lnw
+      - DOCKER_INFLUXDB_INIT_PASSWORD=Password123!@#
+      - DOCKER_INFLUXDB_INIT_ORG=lnw
+      - DOCKER_INFLUXDB_INIT_BUCKET=telemetry
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=cfOeBvdeNTKLAeyHe_HHryBZBZN_KtDZ_j5qLv_GKNX2UwHacCi4_Bokg11jIkJR2hBwJby9D9P37GSDaYMjbA== 
+  telegraf:
+    image: "telegraf"
+    container_name: telegraf
+    networks:
+      - net
+    depends_on:
+      - config
+      - influxdb
+    volumes:
+      - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+  grafana:
+    image: "grafana/grafana"
+    container_name: grafana
+    networks:
+      - net
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=lnw
+      - GF_SECURITY_ADMIN_PASSWORD=Password123!@#
+    depends_on:
+      - influxdb
+      - config
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
